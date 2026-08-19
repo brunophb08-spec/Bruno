@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Trilha dos Filósofos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Literata:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1F1730;
+    --bg-alt:#170F26;
+    --panel:#271C3B;
+    --parchment:#EDE3CF;
+    --parchment-dim:#B9AE9B;
+    --gold:#C9A227;
+    --line:rgba(237,227,207,0.14);
+    --radius:14px;
+    --serif-display:'Fraunces', serif;
+    --serif-body:'Literata', serif;
+    --mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 80% 50% at 15% -10%, rgba(201,162,39,0.12), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(91,140,123,0.10), transparent 60%),
+      var(--bg);
+    color:var(--parchment);
+    font-family:var(--serif-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  ::selection{background:var(--gold); color:var(--bg-alt);}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    max-width:920px;
+    margin:0 auto;
+    padding:72px 24px 40px;
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 18px;
+  }
+  .hero h1{
+    font-family:var(--serif-display);
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:clamp(2.4rem, 6vw, 4.2rem);
+    margin:0 0 18px;
+    letter-spacing:-0.01em;
+  }
+  .hero .lede{
+    font-size:1.15rem;
+    color:var(--parchment-dim);
+    max-width:560px;
+    margin:0 auto 36px;
+  }
+  .hero-controls{display:flex; flex-direction:column; gap:16px; align-items:center;}
+  #search{
+    width:100%;
+    max-width:460px;
+    padding:14px 20px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--parchment);
+    font-family:var(--serif-body);
+    font-size:1rem;
+  }
+  #search::placeholder{color:var(--parchment-dim);}
+  #search:focus{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .tag-filters{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:640px;}
+  .tag-chip{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.03em;
+    padding:7px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--parchment-dim);
+    cursor:pointer;
+  }
+  .tag-chip:hover{border-color:var(--gold); color:var(--parchment);}
+  .tag-chip.active{background:var(--gold); border-color:var(--gold); color:var(--bg-alt); font-weight:500;}
+  .tag-chip:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  /* ---------- ERA NAV ---------- */
+  .era-nav{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    max-width:100%;
+    padding:28px 24px 0;
+    justify-content:flex-start;
+    scrollbar-width:thin;
+  }
+  .era-nav a{
+    flex:0 0 auto;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.04em;
+    text-decoration:none;
+    padding:8px 14px;
+    border-radius:999px;
+    border:1px solid var(--era-color, var(--line));
+    color:var(--era-color, var(--parchment-dim));
+    white-space:nowrap;
+  }
+  .era-nav a:hover{background:color-mix(in srgb, var(--era-color) 18%, transparent);}
+
+  /* ---------- TIMELINE STRUCTURE ---------- */
+  main{max-width:880px; margin:0 auto; padding:20px 24px 60px; position:relative;}
+
+  .era{margin-top:64px; position:relative;}
+  .era-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:22px;
+    padding-left:34px;
+    position:relative;
+  }
+  .era-head::before{
+    content:"";
+    position:absolute;
+    left:0; top:6px;
+    width:16px; height:16px;
+    border-radius:50%;
+    background:var(--era-color);
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--era-color) 25%, transparent);
+  }
+  .era-num{font-family:var(--mono); font-size:12px; color:var(--era-color);}
+  .era-head h2{
+    font-family:var(--serif-display);
+    font-weight:600;
+    font-size:clamp(1.3rem, 3vw, 1.8rem);
+    margin:0;
+    color:var(--parchment);
+  }
+  .era-sub{
+    padding-left:34px;
+    margin:-14px 0 24px;
+    color:var(--parchment-dim);
+    font-size:0.95rem;
+    font-style:italic;
+  }
+
+  .cards{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    padding-left:34px;
+    border-left:1px solid var(--line);
+    margin-left:7px;
+  }
+
+  /* ---------- PHILOSOPHER CARD ---------- */
+  .phil-card{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .phil-card::before{
+    content:"";
+    position:absolute;
+    left:-41px; top:22px;
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--era-color);
+  }
+  .phil-card summary{
+    list-style:none;
+    cursor:pointer;
+    padding:16px 20px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .phil-card summary::-webkit-details-marker{display:none;}
+  .phil-name{
+    font-family:var(--serif-display);
+    font-weight:600;
+    font-size:1.15rem;
+  }
+  .phil-dates{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--parchment-dim);
+  }
+  .phil-card[open] summary{border-bottom:1px solid var(--line);}
+  .phil-card summary::after{
+    content:"+";
+    font-family:var(--mono);
+    color:var(--era-color);
+    margin-left:auto;
+    order:3;
+    font-size:1.1rem;
+  }
+  .phil-card[open] summary::after{content:"–";}
+
+  .phil-body{padding:4px 20px 20px;}
+  .phil-tags{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;}
+  .phil-tags span{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:0.03em;
+    padding:3px 9px;
+    border-radius:999px;
+    background:color-mix(in srgb, var(--era-color) 20%, transparent);
+    color:var(--era-color);
+  }
+  .phil-idea{margin:0 0 10px; font-size:1rem;}
+  .phil-curio{margin:0; font-size:0.92rem; color:var(--parchment-dim);}
+  .phil-curio strong{color:var(--gold); font-weight:600;}
+
+  .no-results{
+    padding-left:34px;
+    color:var(--parchment-dim);
+    font-style:italic;
+  }
+
+  /* ---------- QUIZ ---------- */
+  .quiz-section{max-width:640px; margin:0 auto 90px; padding:0 24px; text-align:center;}
+  .quiz-toggle{
+    font-family:var(--mono);
+    font-size:13px;
+    letter-spacing:0.04em;
+    padding:14px 28px;
+    border-radius:999px;
+    border:1px solid var(--gold);
+    background:transparent;
+    color:var(--gold);
+    cursor:pointer;
+  }
+  .quiz-toggle:hover{background:var(--gold); color:var(--bg-alt);}
+  .quiz-panel{margin-top:28px; text-align:left;}
+  .quiz-panel.hidden{display:none;}
+  .quiz-progress{font-family:var(--mono); font-size:12px; color:var(--parchment-dim); margin-bottom:10px;}
+  .quiz-q{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+  }
+  .quiz-q p.prompt{font-size:1rem; margin:0 0 18px;}
+  .quiz-options{display:flex; flex-direction:column; gap:8px;}
+  .quiz-opt{
+    text-align:left;
+    padding:12px 16px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--parchment);
+    font-family:var(--serif-body);
+    font-size:0.95rem;
+    cursor:pointer;
+  }
+  .quiz-opt:hover{border-color:var(--gold);}
+  .quiz-opt.correct{border-color:#5B8C7B; background:rgba(91,140,123,0.18);}
+  .quiz-opt.wrong{border-color:#A65A4B; background:rgba(166,90,75,0.18);}
+  .quiz-opt:disabled{cursor:default;}
+  .quiz-next{
+    margin-top:18px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    padding:10px 20px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--parchment);
+    cursor:pointer;
+  }
+  .quiz-next:hover{border-color:var(--gold); color:var(--gold);}
+  .quiz-score{font-family:var(--serif-display); font-size:1.6rem; text-align:center;}
+
+  footer{
+    text-align:center;
+    padding:30px 24px 60px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--parchment-dim);
+  }
+
+  @media (max-width:560px){
+    .era-nav{padding:24px 16px 0;}
+    main{padding:16px 16px 50px;}
+    .cards{padding-left:24px; margin-left:4px;}
+    .phil-card::before{left:-29px;}
+    .era-head, .era-sub{padding-left:24px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="eyebrow">Um mapa vivo do pensamento</p>
+  <h1>A Trilha dos Filósofos</h1>
+  <p class="lede">Da água de Tales às perguntas de hoje: percorra mais de dois mil e quinhentos anos de filosofia, um pensador de cada vez, na ordem em que a história aconteceu.</p>
+  <div class="hero-controls">
+    <input id="search" type="search" placeholder="Buscar um filósofo... ex: Sócrates, Kant, Beauvoir" aria-label="Buscar filósofo pelo nome">
+    <div class="tag-filters" id="tagFilters"></div>
+  </div>
+</header>
+
+<nav class="era-nav" id="eraNav" aria-label="Navegar por período histórico"></nav>
+
+<main>
+  <div id="timeline"></div>
+</main>
+
+<section class="quiz-section">
+  <button class="quiz-toggle" id="quizToggle">Testar o que aprendi</button>
+  <div class="quiz-panel hidden" id="quizPanel"></div>
+</section>
+
+<footer>Criado pelo Professor Bruno Oliveira. Feito para quem está conhecendo a filosofia agora, com dados apresentados de forma simplificada e didática.</footer>
+
+<script>
+/* ==================== DADOS ==================== */
+const ERAS = [
+  {key:"pre", n:"I", label:"Pré-Socráticos", sub:"Os primeiros a buscar um princípio racional para o mundo", color:"#C9A227"},
+  {key:"classico", n:"II", label:"Período Clássico", sub:"Sócrates, Platão e Aristóteles: a virada para o ser humano e a razão", color:"#A65A4B"},
+  {key:"helenistico", n:"III", label:"Período Helenístico e Romano", sub:"Filosofia como modo de vida, entre o prazer, a virtude e a serenidade", color:"#5B8C7B"},
+  {key:"medieval", n:"IV", label:"Filosofia Medieval", sub:"O diálogo entre fé e razão", color:"#6C7FA6"},
+  {key:"renascenca", n:"V", label:"Renascimento", sub:"A redescoberta do ser humano como centro de sua própria história", color:"#B98D5E"},
+  {key:"moderna", n:"VI", label:"Filosofia Moderna", sub:"A razão, a ciência e os direitos no centro do debate", color:"#7A5C8E"},
+  {key:"seculo19", n:"VII", label:"Século XIX", sub:"A crítica da razão, da história e da sociedade", color:"#7C8B4A"},
+  {key:"seculo20", n:"VIII", label:"Século XX e Contemporânea", sub:"Existência, linguagem e poder em um mundo em transformação", color:"#8E4B5B"},
+];
+
+const TAGS = ["Ética","Política","Metafísica","Conhecimento","Existência","Natureza","Linguagem"];
+
+const PHILOSOPHERS = [
+// I. PRÉ-SOCRÁTICOS
+{n:"Tales de Mileto", b:"c. 624–546 a.C.", e:"pre", tags:["Natureza"], i:"Afirmou que a água é o princípio de todas as coisas, buscando pela primeira vez uma explicação racional para a origem do mundo, sem recorrer aos mitos.", c:"É considerado o primeiro filósofo da história ocidental."},
+{n:"Anaximandro", b:"c. 610–546 a.C.", e:"pre", tags:["Natureza"], i:"Propôs o ápeiron, um princípio indeterminado e infinito, como origem de tudo que existe.", c:"Criou um dos primeiros mapas do mundo conhecido."},
+{n:"Anaxímenes", b:"c. 585–528 a.C.", e:"pre", tags:["Natureza"], i:"Defendeu o ar como princípio de todas as coisas, que se condensa e se rarefaz para formar os demais elementos.", c:"Discípulo de Anaximandro, buscou explicar racionalmente as transformações da matéria."},
+{n:"Pitágoras", b:"c. 570–495 a.C.", e:"pre", tags:["Natureza","Conhecimento"], i:"Ensinou que o número é a essência de todas as coisas e que o cosmos é ordenado por relações matemáticas e harmônicas.", c:"Fundou uma comunidade que unia matemática, música e vida espiritual."},
+{n:"Heráclito de Éfeso", b:"c. 540–470 a.C.", e:"pre", tags:["Natureza","Existência"], i:"Sustentou que tudo flui e se transforma constantemente, sendo o fogo o símbolo dessa mudança permanente.", c:"Ficou conhecido como o Obscuro pela dificuldade de seus escritos."},
+{n:"Parmênides de Eleia", b:"c. 530–460 a.C.", e:"pre", tags:["Metafísica","Conhecimento"], i:"Defendeu que o ser é uno, eterno e imóvel, e que a mudança percebida pelos sentidos é apenas ilusão.", c:"Seu poema filosófico influenciou diretamente Platão."},
+{n:"Zenão de Eleia", b:"c. 490–430 a.C.", e:"pre", tags:["Metafísica","Conhecimento"], i:"Criou paradoxos, como o de Aquiles e a tartaruga, para defender a impossibilidade lógica do movimento.", c:"É considerado um dos criadores da dialética."},
+{n:"Empédocles", b:"c. 494–434 a.C.", e:"pre", tags:["Natureza"], i:"Propôs quatro raízes eternas, terra, água, ar e fogo, movidas por Amor e Ódio como origem de todas as coisas.", c:"Uniu explicação racional e elementos místicos em sua obra."},
+{n:"Anaxágoras", b:"c. 500–428 a.C.", e:"pre", tags:["Natureza","Conhecimento"], i:"Introduziu o nous, uma mente ordenadora, como força que organiza o universo.", c:"Foi acusado de impiedade em Atenas por suas ideias sobre os astros."},
+{n:"Demócrito", b:"c. 460–370 a.C.", e:"pre", tags:["Natureza","Conhecimento"], i:"Formulou, junto com Leucipo, a teoria de que tudo é composto por átomos indivisíveis em movimento no vazio.", c:"Ficou conhecido como o filósofo que ri, por seu otimismo diante da vida."},
+
+// II. CLÁSSICO
+{n:"Sócrates", b:"469–399 a.C.", e:"classico", tags:["Ética","Conhecimento"], i:"Defendeu que o autoconhecimento é o caminho para a virtude, usando o diálogo e a ironia para revelar as contradições do saber alheio.", c:"Não deixou nada escrito; conhecemos suas ideias por meio de seus discípulos."},
+{n:"Platão", b:"428–348 a.C.", e:"classico", tags:["Metafísica","Política","Conhecimento"], i:"Formulou a teoria das Ideias, segundo a qual o mundo sensível é apenas cópia imperfeita de um mundo perfeito e eterno das essências.", c:"Fundou a Academia, uma das primeiras instituições de ensino do Ocidente."},
+{n:"Aristóteles", b:"384–322 a.C.", e:"classico", tags:["Metafísica","Ética","Política","Conhecimento"], i:"Desenvolveu a lógica formal e defendeu que a felicidade se alcança pelo exercício da virtude conforme a razão.", c:"Foi tutor de Alexandre, o Grande, e fundou o Liceu em Atenas."},
+
+// III. HELENÍSTICO E ROMANO
+{n:"Epicuro", b:"341–270 a.C.", e:"helenistico", tags:["Ética","Existência"], i:"Ensinou que o prazer moderado e a ausência de perturbação são o caminho para uma vida feliz.", c:"Fundou o Jardim, uma comunidade filosófica aberta a homens, mulheres e escravos."},
+{n:"Zenão de Cítio", b:"c. 334–262 a.C.", e:"helenistico", tags:["Ética"], i:"Fundou o Estoicismo, escola que defende viver de acordo com a razão e aceitar com serenidade o que não está sob nosso controle.", c:"Dava suas aulas em um pórtico pintado, a stoa, em Atenas, origem do nome estoicismo."},
+{n:"Pirro de Élis", b:"c. 360–270 a.C.", e:"helenistico", tags:["Conhecimento","Ética"], i:"Fundador do ceticismo antigo, defendeu a suspensão do juízo diante da impossibilidade de uma certeza absoluta.", c:"Acompanhou as tropas de Alexandre até a Índia, onde teria conhecido sábios locais."},
+{n:"Diógenes de Sinope", b:"c. 412–323 a.C.", e:"helenistico", tags:["Ética"], i:"Praticou o cinismo radical, vivendo com o mínimo possível para denunciar as convenções sociais como artificiais.", c:"Segundo a tradição, vivia em um barril e andava por Atenas com uma lanterna à procura de um homem honesto."},
+{n:"Epicteto", b:"c. 50–135 d.C.", e:"helenistico", tags:["Ética"], i:"Ensinou que a liberdade interior depende de distinguir o que está em nosso poder do que não está.", c:"Nasceu escravo e tornou se um dos maiores mestres estoicos de Roma."},
+{n:"Sêneca", b:"4 a.C.–65 d.C.", e:"helenistico", tags:["Ética"], i:"Refletiu sobre o uso do tempo e a serenidade diante da morte como marcas da sabedoria estoica.", c:"Foi tutor e conselheiro do imperador Nero."},
+{n:"Marco Aurélio", b:"121–180 d.C.", e:"helenistico", tags:["Ética"], i:"Em suas Meditações, praticou a filosofia estoica como exercício diário de autocontrole e aceitação.", c:"Foi imperador de Roma e escreveu suas reflexões apenas para si mesmo."},
+
+// IV. MEDIEVAL
+{n:"Plotino", b:"c. 205–270 d.C.", e:"medieval", tags:["Metafísica","Existência"], i:"Desenvolveu o neoplatonismo, segundo o qual tudo emana de um princípio único e transcendente, o Uno.", c:"Suas ideias influenciaram profundamente o pensamento cristão posterior."},
+{n:"Agostinho de Hipona", b:"354–430", e:"medieval", tags:["Ética","Existência","Metafísica"], i:"Uniu fé cristã e filosofia platônica, defendendo que a verdade plena se encontra em Deus e no interior da alma.", c:"Antes de se converter ao cristianismo, viveu de forma intensa, relatada em sua obra Confissões."},
+{n:"Boécio", b:"c. 480–524", e:"medieval", tags:["Ética","Metafísica"], i:"Refletiu sobre o destino, a fortuna e a busca pela felicidade verdadeira em A Consolação da Filosofia, escrita na prisão.", c:"Foi condenado à morte e escreveu sua obra mais famosa aguardando a execução."},
+{n:"Avicena", b:"980–1037", e:"medieval", tags:["Metafísica","Conhecimento"], i:"Sistematizou o pensamento aristotélico no mundo islâmico, distinguindo essência e existência como conceitos fundamentais.", c:"Foi também médico, autor de um dos tratados mais influentes da medicina medieval."},
+{n:"Averróis", b:"1126–1198", e:"medieval", tags:["Conhecimento","Metafísica"], i:"Defendeu a compatibilidade entre razão filosófica e fé religiosa, sendo o grande comentador de Aristóteles.", c:"Seus comentários influenciaram tanto o pensamento islâmico quanto o cristão medieval."},
+{n:"Anselmo de Cantuária", b:"1033–1109", e:"medieval", tags:["Metafísica","Conhecimento"], i:"Formulou o argumento ontológico, tentando provar a existência de Deus apenas pela razão.", c:"Resumia seu método na frase creio para entender."},
+{n:"Tomás de Aquino", b:"1225–1274", e:"medieval", tags:["Metafísica","Ética","Política"], i:"Conciliou a filosofia aristotélica com a teologia cristã, defendendo que fé e razão conduzem à mesma verdade.", c:"Sua obra Suma Teológica tornou se referência central da filosofia católica."},
+{n:"Guilherme de Ockham", b:"c. 1285–1347", e:"medieval", tags:["Conhecimento","Metafísica"], i:"Defendeu o princípio da simplicidade explicativa, hoje conhecido como navalha de Ockham, e questionou os universais.", c:"Suas ideias abriram caminho para a separação moderna entre fé e ciência."},
+{n:"Hildegarda de Bingen", b:"1098–1179", e:"medieval", tags:["Existência","Ética"], i:"Uniu misticismo, teologia e observação da natureza em uma visão integrada do cosmos e da alma humana.", c:"Foi também compositora, escritora e naturalista reconhecida em seu tempo."},
+
+// V. RENASCIMENTO
+{n:"Nicolau de Cusa", b:"1401–1464", e:"renascenca", tags:["Metafísica","Conhecimento"], i:"Propôs a docta ignorantia, a ideia de que o conhecimento humano é sempre limitado diante do infinito divino.", c:"Antecipou intuições que só seriam desenvolvidas séculos depois pela ciência moderna."},
+{n:"Nicolau Maquiavel", b:"1469–1527", e:"renascenca", tags:["Política"], i:"Analisou o poder político de forma realista, separando a ética tradicional da eficácia prática de governar.", c:"Sua obra O Príncipe deu origem ao termo maquiavélico."},
+{n:"Erasmo de Roterdã", b:"1466–1536", e:"renascenca", tags:["Ética","Conhecimento"], i:"Criticou com ironia os vícios da sociedade e da Igreja de seu tempo, defendendo uma fé mais simples e humana.", c:"Sua obra Elogio da Loucura é uma das grandes sátiras da literatura ocidental."},
+{n:"Thomas More", b:"1478–1535", e:"renascenca", tags:["Política","Ética"], i:"Imaginou uma sociedade ideal, sem propriedade privada, em sua obra Utopia.", c:"Foi executado por se recusar a reconhecer o rei da Inglaterra como chefe da Igreja."},
+{n:"Giordano Bruno", b:"1548–1600", e:"renascenca", tags:["Metafísica","Natureza"], i:"Defendeu um universo infinito com inúmeros mundos, rompendo com a visão medieval fechada do cosmos.", c:"Foi condenado e morto pela Inquisição por suas ideias."},
+{n:"Michel de Montaigne", b:"1533–1592", e:"renascenca", tags:["Existência","Ética","Conhecimento"], i:"Criou o gênero do ensaio para praticar a dúvida e o autoconhecimento, questionando certezas culturais.", c:"Sua pergunta que sei eu tornou se símbolo do espírito cético moderno."},
+
+// VI. MODERNA
+{n:"Francis Bacon", b:"1561–1626", e:"moderna", tags:["Conhecimento","Natureza"], i:"Defendeu o método experimental e indutivo como caminho seguro para o conhecimento da natureza.", c:"É considerado um dos fundadores do método científico moderno."},
+{n:"René Descartes", b:"1596–1650", e:"moderna", tags:["Conhecimento","Metafísica"], i:"Propôs a dúvida metódica e concluiu que a certeza primeira é a existência do próprio pensamento, no penso, logo existo.", c:"É considerado o pai da filosofia moderna."},
+{n:"Thomas Hobbes", b:"1588–1679", e:"moderna", tags:["Política","Ética"], i:"Defendeu que o estado de natureza é de guerra de todos contra todos, justificando um poder soberano forte para garantir a paz.", c:"Sua obra Leviatã é um marco do pensamento político moderno."},
+{n:"Baruch Spinoza", b:"1632–1677", e:"moderna", tags:["Metafísica","Ética"], i:"Defendeu que Deus e a natureza são uma única substância infinita, e que a liberdade está em compreender essa necessidade racional.", c:"Foi afastado de sua comunidade religiosa por suas ideias e viveu de forma modesta, polindo lentes."},
+{n:"John Locke", b:"1632–1704", e:"moderna", tags:["Política","Conhecimento"], i:"Defendeu que a mente nasce como uma folha em branco e que o conhecimento vem da experiência, além de propor direitos naturais à vida, liberdade e propriedade.", c:"Suas ideias influenciaram diretamente a Declaração de Independência dos Estados Unidos."},
+{n:"Gottfried Leibniz", b:"1646–1716", e:"moderna", tags:["Metafísica","Conhecimento"], i:"Propôs que o universo é composto por infinitas substâncias simples, as mônadas, e que vivemos no melhor dos mundos possíveis.", c:"Desenvolveu o cálculo infinitesimal de forma independente de Newton."},
+{n:"Blaise Pascal", b:"1623–1662", e:"moderna", tags:["Existência","Conhecimento"], i:"Refletiu sobre a pequenez e a grandeza do ser humano diante do infinito, unindo razão e fé em sua filosofia.", c:"Foi também um matemático prodígio, criador de uma das primeiras máquinas de calcular."},
+{n:"George Berkeley", b:"1685–1753", e:"moderna", tags:["Conhecimento","Metafísica"], i:"Defendeu que só existe aquilo que é percebido, sintetizado na fórmula ser é ser percebido.", c:"Sua filosofia é considerada uma das formas mais radicais do idealismo."},
+{n:"David Hume", b:"1711–1776", e:"moderna", tags:["Conhecimento","Ética"], i:"Argumentou que o conhecimento vem da experiência e que a ideia de causalidade é apenas um hábito da mente, não uma necessidade lógica.", c:"Suas ideias despertaram Kant do que ele chamou de sono dogmático."},
+{n:"Jean-Jacques Rousseau", b:"1712–1778", e:"moderna", tags:["Política","Ética"], i:"Defendeu que o ser humano nasce bom e é corrompido pela sociedade, propondo um contrato social baseado na vontade geral.", c:"Suas ideias sobre educação e liberdade influenciaram diretamente a Revolução Francesa."},
+{n:"Montesquieu", b:"1689–1755", e:"moderna", tags:["Política"], i:"Defendeu a separação dos poderes em Executivo, Legislativo e Judiciário como garantia contra o abuso de poder.", c:"Sua teoria da separação dos poderes está na base das constituições modernas, incluindo a brasileira."},
+{n:"Voltaire", b:"1694–1778", e:"moderna", tags:["Política","Ética"], i:"Defendeu a tolerância religiosa, a liberdade de expressão e a luta contra o fanatismo por meio da razão crítica.", c:"Foi perseguido e exilado diversas vezes por suas críticas à Igreja e ao Estado."},
+{n:"Immanuel Kant", b:"1724–1804", e:"moderna", tags:["Conhecimento","Ética","Metafísica"], i:"Propôs que a mente humana organiza ativamente a experiência, e formulou o imperativo categórico como base racional da moral.", c:"Viveu quase toda a vida na mesma cidade, seguindo uma rotina tão regular que os vizinhos ajustavam relógios por ele."},
+{n:"Mary Wollstonecraft", b:"1759–1797", e:"moderna", tags:["Política","Ética"], i:"Defendeu a igualdade racional entre homens e mulheres e o direito das mulheres à educação.", c:"É considerada uma das fundadoras do pensamento feminista moderno."},
+
+// VII. SÉCULO XIX
+{n:"Georg Wilhelm Friedrich Hegel", b:"1770–1831", e:"seculo19", tags:["Metafísica","Política","Conhecimento"], i:"Concebeu a história como um processo dialético em que o espírito avança por meio de contradições superadas.", c:"Sua dialética influenciou profundamente pensadores posteriores, incluindo Marx."},
+{n:"Arthur Schopenhauer", b:"1788–1860", e:"seculo19", tags:["Existência","Metafísica"], i:"Defendeu que a essência do mundo é uma vontade cega e insaciável, sendo a existência marcada pelo sofrimento.", c:"Foi um dos primeiros filósofos ocidentais a dialogar com o pensamento budista e hindu."},
+{n:"Søren Kierkegaard", b:"1813–1855", e:"seculo19", tags:["Existência","Ética"], i:"Defendeu que a existência autêntica exige escolhas individuais assumidas com angústia e responsabilidade diante de Deus.", c:"É considerado um dos precursores do existencialismo."},
+{n:"Karl Marx", b:"1818–1883", e:"seculo19", tags:["Política","Ética"], i:"Analisou a história como luta de classes e defendeu que as condições materiais e econômicas determinam a consciência social.", c:"Sua obra O Capital é uma das mais influentes análises do capitalismo já escritas."},
+{n:"John Stuart Mill", b:"1806–1873", e:"seculo19", tags:["Ética","Política"], i:"Defendeu o utilitarismo, segundo o qual as ações devem buscar o maior bem estar para o maior número de pessoas, aliado à liberdade individual.", c:"Foi também um defensor pioneiro dos direitos das mulheres em sua época."},
+{n:"Friedrich Nietzsche", b:"1844–1900", e:"seculo19", tags:["Ética","Existência","Metafísica"], i:"Criticou os valores tradicionais da moral e da religião, propondo a superação do niilismo pela afirmação da vida.", c:"Sua frase Deus está morto é uma das mais citadas e mal compreendidas da filosofia."},
+{n:"Auguste Comte", b:"1798–1857", e:"seculo19", tags:["Conhecimento","Política"], i:"Fundou o positivismo, defendendo que o conhecimento científico é a etapa final e mais elevada do pensamento humano.", c:"A frase Ordem e Progresso, na bandeira do Brasil, é inspirada em seu lema positivista."},
+
+// VIII. SÉCULO XX E CONTEMPORÂNEA
+{n:"Edmund Husserl", b:"1859–1938", e:"seculo20", tags:["Conhecimento","Existência"], i:"Fundou a fenomenologia, método que busca descrever a consciência e os fenômenos tal como se manifestam à experiência.", c:"Sua filosofia influenciou praticamente toda a filosofia continental do século vinte."},
+{n:"Henri Bergson", b:"1859–1941", e:"seculo20", tags:["Metafísica","Existência"], i:"Distinguiu o tempo vivido, contínuo e qualitativo, do tempo medido pelos relógios, valorizando a intuição como forma de conhecimento.", c:"Recebeu o Prêmio Nobel de Literatura em 1927."},
+{n:"Ludwig Wittgenstein", b:"1889–1951", e:"seculo20", tags:["Linguagem","Conhecimento"], i:"Investigou os limites da linguagem, afirmando que os limites de nossa linguagem são os limites de nosso mundo.", c:"Chegou a abandonar a filosofia por anos, trabalhando como professor primário em vilarejos austríacos."},
+{n:"Martin Heidegger", b:"1889–1976", e:"seculo20", tags:["Existência","Metafísica"], i:"Investigou o sentido do ser a partir da existência humana, a presença marcada pela finitude e pela relação com a morte.", c:"Sua obra Ser e Tempo é considerada uma das mais influentes e difíceis do século vinte."},
+{n:"Jean-Paul Sartre", b:"1905–1980", e:"seculo20", tags:["Existência","Ética","Política"], i:"Defendeu que a existência precede a essência, ou seja, o ser humano se define por suas escolhas livres, e não por uma natureza fixa.", c:"Recusou o Prêmio Nobel de Literatura em 1964 por coerência com suas convicções."},
+{n:"Simone de Beauvoir", b:"1908–1986", e:"seculo20", tags:["Existência","Ética","Política"], i:"Analisou a condição feminina como construção social, afirmando que ninguém nasce mulher, mas se torna mulher.", c:"Sua obra O Segundo Sexo é considerada fundadora do feminismo filosófico contemporâneo."},
+{n:"Albert Camus", b:"1913–1960", e:"seculo20", tags:["Existência","Ética"], i:"Refletiu sobre o absurdo da existência e defendeu a revolta lúcida como resposta digna diante de um mundo sem sentido dado.", c:"Recebeu o Prêmio Nobel de Literatura em 1957, aos 44 anos."},
+{n:"Hannah Arendt", b:"1906–1975", e:"seculo20", tags:["Política","Ética"], i:"Analisou as origens do totalitarismo e a banalidade do mal, defendendo a importância da ação política e do pensamento crítico.", c:"Cunhou a expressão banalidade do mal ao cobrir o julgamento do nazista Adolf Eichmann."},
+{n:"Maurice Merleau-Ponty", b:"1908–1961", e:"seculo20", tags:["Existência","Conhecimento"], i:"Defendeu que o corpo é o meio primeiro de nossa relação com o mundo, anterior a qualquer separação entre mente e matéria.", c:"Sua fenomenologia da percepção influenciou também as ciências cognitivas."},
+{n:"Karl Popper", b:"1902–1994", e:"seculo20", tags:["Conhecimento","Política"], i:"Defendeu que uma teoria só é científica se puder ser refutada pela experiência, e criticou os sistemas políticos totalitários.", c:"Sua obra A Sociedade Aberta e seus Inimigos é uma defesa clássica da democracia."},
+{n:"Theodor Adorno", b:"1903–1969", e:"seculo20", tags:["Ética","Política","Conhecimento"], i:"Junto à Escola de Frankfurt, criticou a razão instrumental e a indústria cultural como formas de dominação na sociedade moderna.", c:"Compôs também música e escreveu sobre teoria musical ao longo da vida."},
+{n:"Michel Foucault", b:"1926–1984", e:"seculo20", tags:["Política","Conhecimento","Ética"], i:"Investigou como o saber e o poder se entrelaçam para produzir instituições, normas e formas de disciplina ao longo da história.", c:"Suas pesquisas sobre prisões, hospitais e sexualidade transformaram diversas áreas das ciências humanas."},
+{n:"Jacques Derrida", b:"1930–2004", e:"seculo20", tags:["Linguagem","Conhecimento"], i:"Criou o método da desconstrução, mostrando como os textos filosóficos escondem tensões e hierarquias que podem ser reveladas pela leitura crítica.", c:"Nasceu na Argélia e tornou se um dos filósofos mais influentes e debatidos do século vinte."},
+{n:"Gilles Deleuze", b:"1925–1995", e:"seculo20", tags:["Metafísica","Política"], i:"Propôs conceitos como rizoma e diferença para pensar a realidade fora de estruturas fixas e hierárquicas.", c:"Escreveu diversas obras em parceria com o psicanalista Félix Guattari."},
+{n:"John Rawls", b:"1921–2002", e:"seculo20", tags:["Política","Ética"], i:"Propôs pensar a justiça a partir de um véu de ignorância, imaginando princípios que seriam escolhidos sem saber qual posição social se ocupará.", c:"Sua obra Uma Teoria da Justiça renovou a filosofia política no século vinte."},
+{n:"Jürgen Habermas", b:"nascido em 1929", e:"seculo20", tags:["Política","Linguagem","Ética"], i:"Defendeu que a legitimidade das normas sociais deve nascer do diálogo racional e do entendimento mútuo entre os envolvidos.", c:"É um dos principais herdeiros vivos da tradição da Escola de Frankfurt."},
+];
+
+/* ==================== RENDER TIMELINE ==================== */
+const timelineEl = document.getElementById("timeline");
+const eraNavEl = document.getElementById("eraNav");
+const tagFiltersEl = document.getElementById("tagFilters");
+
+function eraOf(key){ return ERAS.find(e=>e.key===key); }
+
+ERAS.forEach(era=>{
+  const a = document.createElement("a");
+  a.href = "#era-"+era.key;
+  a.textContent = era.n+". "+era.label;
+  a.style.setProperty("--era-color", era.color);
+  eraNavEl.appendChild(a);
+
+  const section = document.createElement("section");
+  section.className = "era";
+  section.id = "era-"+era.key;
+  section.style.setProperty("--era-color", era.color);
+
+  const head = document.createElement("div");
+  head.className = "era-head";
+  head.innerHTML = `<span class="era-num">${era.n}</span><h2>${era.label}</h2>`;
+  section.appendChild(head);
+
+  const sub = document.createElement("p");
+  sub.className = "era-sub";
+  sub.textContent = era.sub;
+  section.appendChild(sub);
+
+  const cardsWrap = document.createElement("div");
+  cardsWrap.className = "cards";
+  cardsWrap.id = "cards-"+era.key;
+  section.appendChild(cardsWrap);
+
+  timelineEl.appendChild(section);
+});
+
+PHILOSOPHERS.forEach((p, idx)=>{
+  const era = eraOf(p.e);
+  const wrap = document.getElementById("cards-"+p.e);
+  const details = document.createElement("details");
+  details.className = "phil-card";
+  details.dataset.tags = p.tags.join(",");
+  details.dataset.name = p.n.toLowerCase();
+  details.style.setProperty("--era-color", era.color);
+
+  details.innerHTML = `
+    <summary>
+      <span class="phil-name">${p.n}</span>
+      <span class="phil-dates">${p.b}</span>
+    </summary>
+    <div class="phil-body">
+      <div class="phil-tags">${p.tags.map(t=>`<span>${t}</span>`).join("")}</div>
+      <p class="phil-idea">${p.i}</p>
+      <p class="phil-curio"><strong>Curiosidade:</strong> ${p.c}</p>
+    </div>
+  `;
+  wrap.appendChild(details);
+});
+
+/* ==================== FILTROS ==================== */
+TAGS.forEach(tag=>{
+  const btn = document.createElement("button");
+  btn.className = "tag-chip";
+  btn.textContent = tag;
+  btn.type = "button";
+  btn.addEventListener("click", ()=>{
+    btn.classList.toggle("active");
+    applyFilters();
+  });
+  tagFiltersEl.appendChild(btn);
+});
+
+const searchInput = document.getElementById("search");
+searchInput.addEventListener("input", applyFilters);
+
+function activeTags(){
+  return [...tagFiltersEl.querySelectorAll(".tag-chip.active")].map(b=>b.textContent);
+}
+
+function applyFilters(){
+  const term = searchInput.value.trim().toLowerCase();
+  const tags = activeTags();
+
+  ERAS.forEach(era=>{
+    const wrap = document.getElementById("cards-"+era.key);
+    let visibleCount = 0;
+
+    wrap.querySelectorAll(".phil-card").forEach(card=>{
+      const nameMatch = !term || card.dataset.name.includes(term);
+      const cardTags = card.dataset.tags.split(",");
+      const tagMatch = tags.length === 0 || tags.some(t=>cardTags.includes(t));
+      const show = nameMatch && tagMatch;
+      card.style.display = show ? "" : "none";
+      if(show) visibleCount++;
+    });
+
+    const section = document.getElementById("era-"+era.key);
+    section.style.display = visibleCount === 0 ? "none" : "";
+  });
+}
+
+/* ==================== QUIZ ==================== */
+const quizToggle = document.getElementById("quizToggle");
+const quizPanel = document.getElementById("quizPanel");
+let quizState = null;
+
+quizToggle.addEventListener("click", ()=>{
+  const opening = quizPanel.classList.contains("hidden");
+  quizPanel.classList.toggle("hidden");
+  quizToggle.textContent = opening ? "Fechar o quiz" : "Testar o que aprendi";
+  if(opening && !quizState){
+    startQuiz();
+  }
+});
+
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function truncate(text, max){
+  if(text.length <= max) return text;
+  return text.slice(0, text.lastIndexOf(" ", max)) + "...";
+}
+
+function startQuiz(){
+  const pool = shuffle(PHILOSOPHERS).slice(0, 10);
+  quizState = { questions: pool, index: 0, score: 0 };
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const { questions, index, score } = quizState;
+  if(index >= questions.length){
+    quizPanel.innerHTML = `
+      <p class="quiz-score">Você acertou ${score} de ${questions.length}</p>
+      <div style="text-align:center;">
+        <button class="quiz-next" id="quizRestart">Jogar novamente</button>
+      </div>
+    `;
+    document.getElementById("quizRestart").addEventListener("click", startQuiz);
+    return;
+  }
+
+  const current = questions[index];
+  const distractors = shuffle(PHILOSOPHERS.filter(p=>p.n !== current.n)).slice(0,3);
+  const options = shuffle([current, ...distractors]);
+
+  quizPanel.innerHTML = `
+    <p class="quiz-progress">Pergunta ${index+1} de ${questions.length} · Pontuação: ${score}</p>
+    <div class="quiz-q">
+      <p class="prompt">Qual filósofo pensou assim: <em>"${truncate(current.i, 130)}"</em></p>
+      <div class="quiz-options">
+        ${options.map((o,i)=>`<button class="quiz-opt" data-name="${o.n}" data-idx="${i}">${o.n}</button>`).join("")}
+      </div>
+    </div>
+  `;
+
+  quizPanel.querySelectorAll(".quiz-opt").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      quizPanel.querySelectorAll(".quiz-opt").forEach(b=>b.disabled = true);
+      const chosen = btn.dataset.name;
+      if(chosen === current.n){
+        btn.classList.add("correct");
+        quizState.score++;
+      } else {
+        btn.classList.add("wrong");
+        quizPanel.querySelector(`[data-name="${current.n}"]`).classList.add("correct");
+      }
+      const nextBtn = document.createElement("button");
+      nextBtn.className = "quiz-next";
+      nextBtn.textContent = index+1 >= questions.length ? "Ver resultado" : "Próxima pergunta";
+      nextBtn.addEventListener("click", ()=>{
+        quizState.index++;
+        renderQuestion();
+      });
+      quizPanel.querySelector(".quiz-q").appendChild(nextBtn);
+    });
+  });
+}
+</script>
+</body>
+</html>
