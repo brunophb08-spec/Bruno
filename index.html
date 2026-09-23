@@ -542,34 +542,68 @@ function initials(name){
   return (first + last).toUpperCase();
 }
 
-async function loadPortrait(avatarEl){
-  const name = avatarEl.dataset.name;
+function chunkArray(arr, size){
+  const out = [];
+  for(let i=0; i<arr.length; i+=size) out.push(arr.slice(i, i+size));
+  return out;
+}
+
+async function fetchPortraitsBatch(names){
+  const params = new URLSearchParams({
+    action: "query",
+    titles: names.join("|"),
+    prop: "pageimages",
+    format: "json",
+    pithumbsize: "200",
+    redirects: "1",
+    origin: "*"
+  });
+  const url = "https://pt.wikipedia.org/w/api.php?" + params.toString();
+  const map = {};
   try{
-    const res = await fetch("https://pt.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(name));
-    if(!res.ok) return;
+    const res = await fetch(url);
+    if(!res.ok) return map;
     const data = await res.json();
-    const src = data.thumbnail && data.thumbnail.source;
-    if(!src) return;
-    const img = document.createElement("img");
-    img.src = src;
-    img.alt = "Retrato de " + name;
-    img.loading = "lazy";
-    img.onload = () => { avatarEl.innerHTML = ""; avatarEl.appendChild(img); };
+    const q = data.query;
+    if(!q || !q.pages) return map;
+
+    const redirectFrom = {};
+    (q.redirects || []).forEach(r => { redirectFrom[r.to] = r.from; });
+    const normalizedFrom = {};
+    (q.normalized || []).forEach(n => { normalizedFrom[n.to] = n.from; });
+
+    Object.values(q.pages).forEach(pg=>{
+      const src = pg.thumbnail && pg.thumbnail.source;
+      if(!src) return;
+      let original = pg.title;
+      if(redirectFrom[original]) original = redirectFrom[original];
+      if(normalizedFrom[original]) original = normalizedFrom[original];
+      map[original] = src;
+    });
   }catch(e){
-    /* mantém as iniciais como reserva em caso de falha */
+    console.warn("Não foi possível buscar retratos na Wikipédia:", e);
+  }
+  return map;
+}
+
+async function loadAllPortraits(){
+  const names = PHILOSOPHERS.map(p=>p.n);
+  const batches = chunkArray(names, 40);
+  for(const batch of batches){
+    const map = await fetchPortraitsBatch(batch);
+    Object.entries(map).forEach(([name, src])=>{
+      const avatarEl = document.querySelector(`.phil-avatar[data-name="${CSS.escape(name)}"]`);
+      if(!avatarEl) return;
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "Retrato de " + name;
+      img.loading = "lazy";
+      img.onload = () => { avatarEl.innerHTML = ""; avatarEl.appendChild(img); };
+    });
   }
 }
 
-const avatarObserver = new IntersectionObserver((entries, obs)=>{
-  entries.forEach(entry=>{
-    if(entry.isIntersecting){
-      loadPortrait(entry.target);
-      obs.unobserve(entry.target);
-    }
-  });
-}, {rootMargin:"200px"});
-
-document.querySelectorAll(".phil-avatar").forEach(el => avatarObserver.observe(el));
+loadAllPortraits();
 
 /* ==================== FILTROS ==================== */
 TAGS.forEach(tag=>{
